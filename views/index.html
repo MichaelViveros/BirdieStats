@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Birdie Stats</title>
+</head>
+<body>
+
+  <header>
+    <h1>Birdie Stats</h1>
+  </header>
+
+  <div id="vue-golf-rounds">
+    
+    <div v-show="showGetRounds">
+
+      <!-- Get Rounds -->
+
+      <button id="btn-input-rounds" @click="inputRounds">Input Round</button><br><br>
+
+      <input id="input-user" v-model="userName" type="text" size="35" placeholder="Enter a user (leave blank for all users)">
+      <button id="btn-get-rounds" @click="getRounds">Get Rounds</button>
+
+      <p>{{statusMsg}}</p>
+
+      <div v-show="rounds.length > 0">
+        <table>
+          <tr>
+            <td>Layout<td>
+            <td>
+              <select v-model="layoutType">
+                <option value="horizontal">Horizontal</option>
+                <option value="vertical">Vertical</option>
+              </select>
+            </td>
+          </tr>
+        </table>
+        <div v-for="i in rounds.length">
+          <h3>Round {{i + 1}}</h3>
+          <p>Date - {{rounds[i].date}}<br></p>
+          <p>Club - {{rounds[i].club}}<br></p>
+          <div v-for="course in rounds[i].courses">
+            <p>Course - {{course.name}}<br></p>
+            <p>Tees - {{course.tees}}<br></p>
+              <div v-show="layoutType == 'horizontal'">
+                <!-- horizontal layout -->
+                <table border="1" cellpadding="4">
+                  <!-- Holes -->
+                  <tr>
+                    <td>Hole</td>
+                    <td v-for="i in course.numHoles">{{i + 1}}</td>
+                    <td>Total</td>
+                    <td>Score</td>
+                  </tr>
+                  <!-- Yards -->
+                  <tr>
+                    <td>Yards</td>
+                    <td v-for="i in course.numHoles">{{course.yards[i]}}</td>
+                    <td>{{course.totalYards}}</td>
+                    <td></td>
+                  </tr>
+                  <!-- Pars -->
+                  <tr>
+                    <td>Par</td>
+                    <td v-for="i in course.numHoles">{{course.pars[i]}}</td>
+                    <td>{{course.totalPar}}</td>
+                    <td></td>
+                  </tr>
+                  <!-- Strokes -->
+                  <tr v-for="score in course.scores">
+                    <td>{{score.player}}</td>
+                    <td v-for="stroke in score.strokes" track-by="$index">{{stroke}}</td>
+                    <td><b>{{score.totalStrokes}}</b></td>
+                    <td>{{score.totalScore > 0 ? '+' + score.totalScore : score.totalScore}}</td>
+                  </tr>
+                </table>
+              </div>
+              <div v-else>
+                <!-- vertical layout -->
+                <!-- Holes -->
+                <table border="1" cellpadding="4">
+                  <tr>
+                    <td>Hole</td>
+                    <td>Yards</td>
+                    <td>Par</td>
+                    <td v-for="i in course.scores.length">{{course.scores[i].player}}</td>
+                  </tr>
+                  <tr v-for="i in course.numHoles">
+                    <td>{{i+1}}</td>
+                    <td>{{course.yards[i]}}</td>
+                    <td>{{course.pars[i]}}</td>
+                    <td v-for="score in course.scores">{{score.strokes[i]}}</td>
+                  </tr>
+                </table>
+              </div>
+          </div><br><br>
+        </div>
+      </div>
+
+    </div>
+
+    <div v-else>
+
+      <!-- Input Rounds -->
+      <h3>Input Rounds</h3>
+
+      <input v-model="date" type="text" size="35" placeholder="Enter date, yyyy-mm-dd"><br><br>
+      <input v-model="club" type="text" size="35" placeholder="Enter club"><br><br>
+      <table id="table-players">
+        <tr v-for="i in players.length">
+          <td><input v-model="players[i]" type="text" size="35" placeholder="Enter player"></td>
+        <tr>   
+      </table>         
+      <br>
+      <button id="btn-add-player" @click="addPlayer" v-bind:disabled="!canAddPlayers">Add Player</button>
+      <button id="btn-remove-player" @click="removePlayer" v-bind:disabled="players.length == 1">Remove Player</button><br><br>
+
+      <div id="div-courses" v-for="i in courses.length">
+        <input v-model="courses[i].name" type="text" size="35" placeholder="Enter course"><br><br>
+        <input v-model="courses[i].tees" type="text" size="35" placeholder="Enter tees"><br><br>
+        <input v-model="courses[i].numHoles" number type="number" size="35" placeholder="Enter number of holes"><br><br>
+        <!-- Strokes -->
+        <table border="1" cellpadding="4">
+          <tr>
+            <th>Hole</th>
+            <th v-for="j in courses[i].numHoles">{{j+1}}</th>
+          </tr>
+          <tr v-for="j in players.length">
+            <td>{{players[j]}}</td>
+            <td v-for="k in courses[i].numHoles"><input type="number" style="width: 35px;" min="0" max="20"></td>
+          </tr>
+        </table><br><br>
+      </div>
+
+      <button id="btn-add-course" @click="addCourse" v-bind:disabled="!canAddCourses">Add Course</button>
+      <button id="btn-remove-course" @click="removeCourse" v-bind:disabled="courses.length == 1">Remove Course</button><br><br>
+
+      <button id="btn-done-input-rounds" @click="sendInputRounds">Done</button>
+      <button id="btn-cancel-input-rounds" @click="cancelInputRounds">Cancel</button>
+
+    </div>
+
+  </div>
+
+  <script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
+  <script src="http://cdn.jsdelivr.net/vue/1.0.16/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/vue.resource/0.7.0/vue-resource.min.js"></script>
+  <script src="javascripts/vueRounds.js"></script>
+
+</body>
+</html>

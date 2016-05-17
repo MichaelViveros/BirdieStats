@@ -1,0 +1,15 @@
+{
+  "name": "birdie-stats",
+  "version": "1.0.0",
+  "description": "Golf stat-tracking website",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Michael Viveros",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "~1.13.2",
+    "express": "~4.13.1"
+  }
+}
