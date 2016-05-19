@@ -4,18 +4,15 @@ Golf stat-tracking website:
 * VueJS front-end
 * PostgreSQL db 
 
-<br>
 ###Current Features:
 * Input scores for a round 
 * View scores for all rounds
 
-<br>
 ###COMING SOON:
 * Mobile App
 * Stats - Handicap, Top 3 Lowest Scores, Avg. Score on Par 3s, ... 
 * Swagger API
 
-<br>
 ###Install: 
 1. Download [PostgreSQL](http://www.enterprisedb.com/products-services-training/pgdownload#windows)
   1. Open pgAdmin program
