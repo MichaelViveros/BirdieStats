@@ -4,11 +4,13 @@ Golf stat-tracking website:
 * VueJS front-end
 * PostgreSQL db 
 
-###Current Features:
+Current Features:
 * Input scores for a round 
 * View scores for all rounds
 
-###COMING SOON:
+[Documentation](https://github.com/MichaelViveros/BirdieStats/tree/master/doc)
+
+COMING SOON:
 * Mobile App
 * Stats - Handicap, Top 3 Lowest Scores, Avg. Score on Par 3s, ... 
 * Swagger API
