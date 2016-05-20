@@ -2,26 +2,24 @@ var pg = require('pg');
 var config = require('../config');
 var path = require('path');
 
-var conString = "postgres://" + config.db.username + ":" + config.db.password + "@" + 
-  config.db.host + "/" + config.db.database;
+pg.defaults.ssl = true;
+var conString = process.env.DATABASE_URL;
 
-function handleError(err) {
+function handleError(err, cb) {
   if(!err) return false;
 
   if(typeof client !== 'undefined' && client){
     done(client);
   }
+  cb(err);
   return true;
 }  
 
 function getRounds(user, cb){
-  pg.connect(conString, function(err, client, done) {
+  pg.connect(conString, function(err, client, done) {      
+    if(handleError(err, cb)) return;
     client.query('SELECT * FROM get_rounds($1)', [user], function(err, result) {
-      if(handleError(err)) {
-        cb(err);
-        return;
-      } 
-
+      if(handleError(err, cb)) return;
       // convert rounds from db table format to json
       var dbRound, round, course, player, score;
       var playerCount = 1;
@@ -134,15 +132,12 @@ function inputRounds(newRound, cb){
   });
   
   pg.connect(conString, function(err, client, done) {
+    if(handleError(err, cb)) return;
     client.query(
       'SELECT insert_rounds($1,$2,$3,$4,$5,$6,$7)', 
       [dbRound.roundDate, dbRound.club, dbRound.players, dbRound.courses, dbRound.tees, dbRound.holes, dbRound.strokes], 
       function(err, result) {
-        if(handleError(err)) {
-          cb(err);
-          return;
-        } 
-
+        if(handleError(err, cb)) return;
         var success = result.rows[0].insert_rounds;
         done();
         cb(null, success);

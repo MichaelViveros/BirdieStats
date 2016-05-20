@@ -13,33 +13,6 @@ SET check_function_bodies = false;
 SET client_min_messages = warning;
 SET row_security = off;
 
---
--- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
---
-
-CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
-
-
---
--- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
---
-
-COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
-
-
---
--- Name: adminpack; Type: EXTENSION; Schema: -; Owner: 
---
-
-CREATE EXTENSION IF NOT EXISTS adminpack WITH SCHEMA pg_catalog;
-
-
---
--- Name: EXTENSION adminpack; Type: COMMENT; Schema: -; Owner: 
---
-
-COMMENT ON EXTENSION adminpack IS 'administrative functions for PostgreSQL';
-
 
 SET search_path = public, pg_catalog;
 
@@ -49,55 +22,98 @@ SET search_path = public, pg_catalog;
 
 CREATE FUNCTION get_rounds(user_name text) RETURNS TABLE(round_id integer, round_date date, club text, round_course_id integer, course text, tees text, player text, hole integer, yards integer, par integer, strokes integer)
     LANGUAGE sql STABLE STRICT
-    AS $$
-
-SELECT  
-	round."ID",
-	round."Date",
-	club."ShortName",
-	round_course."ID",
-	course."Name",
-	tee."Name",
-	user_info."Name",
-	strokes."HoleNumber", 
-	tee_hole."Yards", 
-	hole."Par", 
-	strokes."Strokes"
-FROM 
-	"Round" round,
-	"Club" club,
-	"Course" course,
-	"Tee" tee,
-	"User" user_info,
-	"CourseHole" hole,
-	"TeeHole" tee_hole, 
-	"RoundStrokes" strokes,
-	"RoundCourse" round_course,
-	"RoundUser" round_user
-WHERE
-	--TODO should there be joins here instead of just a = b?
-	club."ID" = round."ClubID"
-	and round_course."RoundID" = round."ID"
-	and course."ID" = round_course."CourseID"
-	and tee."ID" = round_course."TeeID"
-	and round_user."RoundID" = round."ID"
-	and user_info."ID" = round_user."UserID"
-	and user_info."Name" LIKE '%' || user_name || '%'
-	and strokes."UserID" = user_info."ID"
-	and strokes."RoundCourseID" = round_course."ID"
-	and tee_hole."TeeID" = tee."ID"
-	and tee_hole."Number" = strokes."HoleNumber"
-	and hole."CourseID" = course."ID"
-	and hole."Number" = strokes."HoleNumber"
-ORDER BY
-	round."ID" DESC,
-	round_course."SequenceNum",
-	round_user."ID",
-	strokes."HoleNumber";
+    AS $$
+
+
+
+SELECT  
+
+	round."ID",
+
+	round."Date",
+
+	club."ShortName",
+
+	round_course."ID",
+
+	course."Name",
+
+	tee."Name",
+
+	user_info."Name",
+
+	strokes."HoleNumber", 
+
+	tee_hole."Yards", 
+
+	hole."Par", 
+
+	strokes."Strokes"
+
+FROM 
+
+	"Round" round,
+
+	"Club" club,
+
+	"Course" course,
+
+	"Tee" tee,
+
+	"User" user_info,
+
+	"CourseHole" hole,
+
+	"TeeHole" tee_hole, 
+
+	"RoundStrokes" strokes,
+
+	"RoundCourse" round_course,
+
+	"RoundUser" round_user
+
+WHERE
+
+	--TODO should there be joins here instead of just a = b?
+
+	club."ID" = round."ClubID"
+
+	and round_course."RoundID" = round."ID"
+
+	and course."ID" = round_course."CourseID"
+
+	and tee."ID" = round_course."TeeID"
+
+	and round_user."RoundID" = round."ID"
+
+	and user_info."ID" = round_user."UserID"
+
+	and user_info."Name" LIKE '%' || user_name || '%'
+
+	and strokes."UserID" = user_info."ID"
+
+	and strokes."RoundCourseID" = round_course."ID"
+
+	and tee_hole."TeeID" = tee."ID"
+
+	and tee_hole."Number" = strokes."HoleNumber"
+
+	and hole."CourseID" = course."ID"
+
+	and hole."Number" = strokes."HoleNumber"
+
+ORDER BY
+
+	round."ID" DESC,
+
+	round_course."SequenceNum",
+
+	round_user."ID",
+
+	strokes."HoleNumber";
+
 $$;
 
-
-ALTER FUNCTION public.get_rounds(user_name text) OWNER TO postgres;
 
 --
 -- Name: insert_rounds(date, text, text[], text[], text[], integer[], integer[]); Type: FUNCTION; Schema: public; Owner: postgres
@@ -105,104 +121,196 @@ ALTER FUNCTION public.get_rounds(user_name text) OWNER TO postgres;
 
 CREATE FUNCTION insert_rounds(round_date date, club text, user_names text[], courses text[], tees text[], holes integer[], strokes integer[]) RETURNS boolean
     LANGUAGE plpgsql
-    AS $$
-DECLARE
-
-	user_id int;
-	user_ids int[];
-	club_id int;
-	course_id int;
-	course_ids int[];
-	tee_id int;
-	tee_ids int[];
-	round_id int;
-	round_course_id int;
-	round_user_id int; 
-
-BEGIN
-
-	--check if parameters are valid
-
-	--user_names
-	FOR i in 1 .. array_length(user_names, 1)
-	LOOP
-		SELECT INTO user_id "ID" FROM "User" WHERE "Name" = user_names[i];
-		IF user_id IS NULL THEN
-			RAISE EXCEPTION 'user % does not exist', user_names[i];
-			--TODO doesn't seem to return false below, gotta check what gets returned to server
-			--RETURN FALSE;
-		END IF;	  
-		user_ids[i] := user_id;
-	END LOOP;
-	
-	--club
-	SELECT INTO club_id "ID" FROM "Club" WHERE "Name" = club OR "ShortName" = club;
-	IF club_id IS NULL THEN
-		RAISE EXCEPTION 'club % does not exist', club;
-	END IF;
-
-	--courses and tees
-	FOR i in 1 .. array_length(courses, 1)
-	LOOP		
-		SELECT INTO course_id "ID" FROM "Course" WHERE "ClubID" = club_id AND "Name" = courses[i];
-		IF course_id IS NULL THEN
-			RAISE EXCEPTION 'Invalid course % for club %', courses[i], club;
-		END IF;
-		SELECT INTO tee_id "ID" FROM "Tee" WHERE "CourseID" = course_id AND "Name" = tees[i];
-		IF tee_id IS NULL THEN
-			RAISE EXCEPTION 'Invalid tee % for course %', tees[i], courses[i];
-		END IF;
-		course_ids[i] := course_id;
-		tee_ids[i] := tee_id;
-	END LOOP;
-
-	--TODO: check hole numbers in holes?
-
-	--insert rounds
-
-	--Round
-	INSERT INTO "Round" ("Date", "ClubID")
-		VALUES (round_date, club_id)
-		RETURNING "ID" into round_id;
-	RAISE NOTICE 'round_id %', round_id; 
-
-	--RoundUser
-	FOR i in 1 .. array_length(user_names, 1) 
-	LOOP
-		INSERT INTO "RoundUser" ("UserID", "RoundID")
-			VALUES (user_ids[i], round_id)
-			RETURNING "ID" into round_user_id;
-		RAISE NOTICE 'round_user_id %', round_user_id;
-	END LOOP;
-
-	--RoundCourse and RoundStrokes
-	FOR i in 1 .. array_length(courses, 1) 
-	LOOP
-		INSERT INTO "RoundCourse" ("RoundID", "CourseID", "TeeID", "SequenceNum")
-			VALUES (round_id, course_ids[i], tee_ids[i], i)
-			RETURNING "ID" into round_course_id;
-		RAISE NOTICE 'round_course_id %', round_course_id;
-		--RAISE NOTICE 'holes 1 % - 2 %', array_length(holes, 1), array_length(holes, 2);
-
-		FOR j in 1 .. array_length(user_names, 1)
-		LOOP
-			FOR k in 1 .. array_length(holes, 2) 
-			LOOP
-				INSERT INTO "RoundStrokes" ("UserID", "HoleNumber", "Strokes", "RoundCourseID")
-					VALUES (user_ids[j], holes[i][k], strokes[i][j][k], round_course_id);
-				RAISE NOTICE 'strokes added - %, %, %, %', user_ids[j], holes[i][k], strokes[i][j][k], round_course_id;
-			END LOOP;
-		END LOOP;
-	END LOOP;
-
-	RETURN TRUE;	
-
-END;
-
+    AS $$
+
+DECLARE
+
+
+
+	user_id int;
+
+	user_ids int[];
+
+	club_id int;
+
+	course_id int;
+
+	course_ids int[];
+
+	tee_id int;
+
+	tee_ids int[];
+
+	round_id int;
+
+	round_course_id int;
+
+	round_user_id int; 
+
+
+
+BEGIN
+
+
+
+	--check if parameters are valid
+
+
+
+	--user_names
+
+	FOR i in 1 .. array_length(user_names, 1)
+
+	LOOP
+
+		SELECT INTO user_id "ID" FROM "User" WHERE "Name" = user_names[i];
+
+		IF user_id IS NULL THEN
+
+			RAISE EXCEPTION 'user % does not exist', user_names[i];
+
+			--TODO doesn't seem to return false below, gotta check what gets returned to server
+
+			--RETURN FALSE;
+
+		END IF;	  
+
+		user_ids[i] := user_id;
+
+	END LOOP;
+
+	
+
+	--club
+
+	SELECT INTO club_id "ID" FROM "Club" WHERE "Name" = club OR "ShortName" = club;
+
+	IF club_id IS NULL THEN
+
+		RAISE EXCEPTION 'club % does not exist', club;
+
+	END IF;
+
+
+
+	--courses and tees
+
+	FOR i in 1 .. array_length(courses, 1)
+
+	LOOP		
+
+		SELECT INTO course_id "ID" FROM "Course" WHERE "ClubID" = club_id AND "Name" = courses[i];
+
+		IF course_id IS NULL THEN
+
+			RAISE EXCEPTION 'Invalid course % for club %', courses[i], club;
+
+		END IF;
+
+		SELECT INTO tee_id "ID" FROM "Tee" WHERE "CourseID" = course_id AND "Name" = tees[i];
+
+		IF tee_id IS NULL THEN
+
+			RAISE EXCEPTION 'Invalid tee % for course %', tees[i], courses[i];
+
+		END IF;
+
+		course_ids[i] := course_id;
+
+		tee_ids[i] := tee_id;
+
+	END LOOP;
+
+
+
+	--TODO: check hole numbers in holes?
+
+
+
+	--insert rounds
+
+
+
+	--Round
+
+	INSERT INTO "Round" ("Date", "ClubID")
+
+		VALUES (round_date, club_id)
+
+		RETURNING "ID" into round_id;
+
+	RAISE NOTICE 'round_id %', round_id; 
+
+
+
+	--RoundUser
+
+	FOR i in 1 .. array_length(user_names, 1) 
+
+	LOOP
+
+		INSERT INTO "RoundUser" ("UserID", "RoundID")
+
+			VALUES (user_ids[i], round_id)
+
+			RETURNING "ID" into round_user_id;
+
+		RAISE NOTICE 'round_user_id %', round_user_id;
+
+	END LOOP;
+
+
+
+	--RoundCourse and RoundStrokes
+
+	FOR i in 1 .. array_length(courses, 1) 
+
+	LOOP
+
+		INSERT INTO "RoundCourse" ("RoundID", "CourseID", "TeeID", "SequenceNum")
+
+			VALUES (round_id, course_ids[i], tee_ids[i], i)
+
+			RETURNING "ID" into round_course_id;
+
+		RAISE NOTICE 'round_course_id %', round_course_id;
+
+		--RAISE NOTICE 'holes 1 % - 2 %', array_length(holes, 1), array_length(holes, 2);
+
+
+
+		FOR j in 1 .. array_length(user_names, 1)
+
+		LOOP
+
+			FOR k in 1 .. array_length(holes, 2) 
+
+			LOOP
+
+				INSERT INTO "RoundStrokes" ("UserID", "HoleNumber", "Strokes", "RoundCourseID")
+
+					VALUES (user_ids[j], holes[i][k], strokes[i][j][k], round_course_id);
+
+				RAISE NOTICE 'strokes added - %, %, %, %', user_ids[j], holes[i][k], strokes[i][j][k], round_course_id;
+
+			END LOOP;
+
+		END LOOP;
+
+	END LOOP;
+
+
+
+	RETURN TRUE;	
+
+
+
+END;
+
+
+
 $$;
 
-
-ALTER FUNCTION public.insert_rounds(round_date date, club text, user_names text[], courses text[], tees text[], holes integer[], strokes integer[]) OWNER TO postgres;
 
 SET default_tablespace = '';
 
@@ -223,7 +331,6 @@ CREATE TABLE "Club" (
 );
 
 
-ALTER TABLE "Club" OWNER TO postgres;
 
 --
 -- Name: Club_ID_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -237,7 +344,6 @@ CREATE SEQUENCE "Club_ID_seq"
     CACHE 1;
 
 
-ALTER TABLE "Club_ID_seq" OWNER TO postgres;
 
 --
 -- Name: Club_ID_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -257,7 +363,6 @@ CREATE TABLE "Course" (
 );
 
 
-ALTER TABLE "Course" OWNER TO postgres;
 
 --
 -- Name: CourseHole; Type: TABLE; Schema: public; Owner: postgres
@@ -273,7 +378,6 @@ CREATE TABLE "CourseHole" (
 );
 
 
-ALTER TABLE "CourseHole" OWNER TO postgres;
 
 --
 -- Name: Course_ID_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -287,7 +391,6 @@ CREATE SEQUENCE "Course_ID_seq"
     CACHE 1;
 
 
-ALTER TABLE "Course_ID_seq" OWNER TO postgres;
 
 --
 -- Name: Course_ID_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -307,7 +410,6 @@ CREATE TABLE "Round" (
 );
 
 
-ALTER TABLE "Round" OWNER TO postgres;
 
 --
 -- Name: RoundCourse; Type: TABLE; Schema: public; Owner: postgres
@@ -322,7 +424,6 @@ CREATE TABLE "RoundCourse" (
 );
 
 
-ALTER TABLE "RoundCourse" OWNER TO postgres;
 
 --
 -- Name: RoundCourses_ID_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -336,7 +437,6 @@ CREATE SEQUENCE "RoundCourses_ID_seq"
     CACHE 1;
 
 
-ALTER TABLE "RoundCourses_ID_seq" OWNER TO postgres;
 
 --
 -- Name: RoundCourses_ID_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -357,7 +457,6 @@ CREATE TABLE "RoundStrokes" (
 );
 
 
-ALTER TABLE "RoundStrokes" OWNER TO postgres;
 
 --
 -- Name: RoundUser; Type: TABLE; Schema: public; Owner: postgres
@@ -372,7 +471,6 @@ CREATE TABLE "RoundUser" (
 );
 
 
-ALTER TABLE "RoundUser" OWNER TO postgres;
 
 --
 -- Name: Round_ID_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -386,7 +484,6 @@ CREATE SEQUENCE "Round_ID_seq"
     CACHE 1;
 
 
-ALTER TABLE "Round_ID_seq" OWNER TO postgres;
 
 --
 -- Name: Round_ID_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -407,7 +504,6 @@ CREATE SEQUENCE "Score_ID_seq"
     CACHE 1;
 
 
-ALTER TABLE "Score_ID_seq" OWNER TO postgres;
 
 --
 -- Name: Score_ID_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -432,7 +528,6 @@ CREATE TABLE "Tee" (
 );
 
 
-ALTER TABLE "Tee" OWNER TO postgres;
 
 --
 -- Name: TeeHole; Type: TABLE; Schema: public; Owner: postgres
@@ -445,7 +540,6 @@ CREATE TABLE "TeeHole" (
 );
 
 
-ALTER TABLE "TeeHole" OWNER TO postgres;
 
 --
 -- Name: Tee_ID_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -459,7 +553,6 @@ CREATE SEQUENCE "Tee_ID_seq"
     CACHE 1;
 
 
-ALTER TABLE "Tee_ID_seq" OWNER TO postgres;
 
 --
 -- Name: Tee_ID_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -482,7 +575,6 @@ CREATE TABLE "User" (
 );
 
 
-ALTER TABLE "User" OWNER TO postgres;
 
 --
 -- Name: User_ID_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -496,7 +588,6 @@ CREATE SEQUENCE "User_ID_seq"
     CACHE 1;
 
 
-ALTER TABLE "User_ID_seq" OWNER TO postgres;
 
 --
 -- Name: User_ID_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
