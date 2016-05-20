@@ -97,10 +97,12 @@ var vm = new Vue({
                     this.showHomeView('Input Round successful');
                 } else {
                     alert(response.data.err);
+                    this.inputRounds();
                 }
             }, function (response) {
                 console.log(response.data);
                 alert(response.data);
+                this.inputRounds();
             });
         },
         cancelInputRounds: function() {
