@@ -47,7 +47,8 @@ var vm = new Vue({
             this.showGetRounds = false;
         },
         sendInputRounds: function() {
-            var holeStrokes = [];
+            var playerStrokes = [];
+            var courseStrokes = [];
             var playerCount = 0;
             var courseIndex = 0;
             var missingStrokes = false;
@@ -57,22 +58,25 @@ var vm = new Vue({
                 var strokes = $(this).val();
                 if (strokes.length == 0) {
                     missingStrokes = true;
-                    return;
+                    return false;
                 }
-                holeStrokes.push(strokes);
-                if (holeStrokes.length == vm.courses[courseIndex].numHoles) {
-                    vm.courses[courseIndex].strokes.push(holeStrokes);
-                    holeStrokes = [];
+                playerStrokes.push(strokes);
+                if (playerStrokes.length == vm.courses[courseIndex].numHoles) {
+                    courseStrokes.push(playerStrokes);
+                    playerStrokes = [];
                     playerCount++;
                 }
                 if (playerCount == vm.players.length) {
+                    vm.courses[courseIndex].strokes = courseStrokes;
+                    courseStrokes = [];
                     courseIndex++;
                     playerCount = 0;
                 }
             });
 
             if (missingStrokes) {
-                alert('Missing strokes for player - ' + vm.players[playerCount] + ', hole - ' + (holeStrokes.length + 1) + '.');
+                alert('Missing strokes.\ncourse - ' + vm.courses[courseIndex].name + '\nplayer - ' + 
+                    vm.players[playerCount] + '\nhole - ' + (playerStrokes.length + 1));
                 return;
             }
 
@@ -97,12 +101,18 @@ var vm = new Vue({
                     this.showHomeView('Input Round successful');
                 } else {
                     alert(response.data.err);
-                    this.inputRounds();
+                    // reset strokes since they're not bound to an element so they could be out of sync
+                    for (var i = 0; i < this.courses.length; i++) {
+                        this.courses[i].strokes = [];
+                    }
                 }
             }, function (response) {
                 console.log(response.data);
                 alert(response.data);
-                this.inputRounds();
+                // reset strokes since they're not bound to an element so they could be out of sync
+                for (var i = 0; i < this.courses.length; i++) {
+                    this.courses[i].strokes = [];
+                }
             });
         },
         cancelInputRounds: function() {
@@ -147,4 +157,4 @@ var vm = new Vue({
     }
 });
 
-vm.showHomeView();
+vm.showHomeView('');
