@@ -11,7 +11,11 @@ var vm = new Vue({
         canAddPlayers: false,
         canAddCourses: false,
         players: [],
-        statusMsg: ''
+        statusMsg: '',
+        playerOptions: [],
+        clubOptions: [],
+        courseOptions: [],
+        teeOptions: []
     },
     methods: {
         getRounds: function() {
@@ -26,12 +30,13 @@ var vm = new Vue({
                 } else {
                     this.statusMsg = '';
                 }
-            }, function (response) {
-                console.log(response.data);
-                alert(response.data);
+            }, function (error) {
+                console.log(error.data);
+                alert(error.data);
             });
         },
         inputRounds: function() {
+            this.statusMsg = 'Setting up input rounds ...';
             this.date = '';
             this.club = '';
             this.courses = [];
@@ -39,14 +44,67 @@ var vm = new Vue({
                 name: '',
                 tees: '',
                 numHoles: null,
-                strokes: []  
+                strokes: []
             });
             this.canAddPlayers = true;
             this.canAddCourses = true;
             this.players = [''];
-            this.showGetRounds = false;
+            this.clubOptions = [];
+            this.playerOptions = [];
+            this.courseOptions = [];
+            this.teeOptions = [];
+
+            this.$http.get(
+                '/api/input-rounds'
+            ).then(function (response) {
+                this.clubOptions = response.data.clubs;
+                this.playerOptions = response.data.players;
+                this.showGetRounds = false;
+            }, function (error) {
+                console.log(error.data);
+                alert(error.data);
+            });
         },
         sendInputRounds: function() {
+            var errors = this.prepareInputRounds();
+            if (errors) {
+                alert(errors);
+                return;
+            }
+
+            this.$http.post(
+                '/api/input-rounds',
+                {
+                    date: this.date,
+                    club: this.club,
+                    courses: this.courses,
+                    players: this.players
+                }
+            ).then(function (response) {
+                var success = response.data.success;
+                if (response.data.success) {
+                    this.showHomeView('Input Round successful');
+                } else {
+                    alert(response.data.err);
+                }
+            }, function (error) {
+                console.log(error.data);
+                alert(error.data);
+            });
+        },
+        prepareInputRounds: function() {
+            if (!this.date) return "Missing date";
+            if (!this.club) return "Missing club";
+            for (var i = 0; i < this.players.length; i++) {
+                if (!this.players[i]) return "Missing name for player " + (i + 1);
+            }
+            for (var i = 0; i < this.courses.length; i++) {
+                if (!this.courses[i].name) return "Missing name for course " + (i + 1);
+                if (!this.courses[i].tees) return "Missing tees for course " + (i + 1);
+                if (!this.courses[i].numHoles) return "Missing number of holes for course " + (i + 1);
+            }
+
+            // populate strokes for each course, since it did not use data binding
             var playerStrokes = [];
             var courseStrokes = [];
             var playerCount = 0;
@@ -73,13 +131,12 @@ var vm = new Vue({
                     playerCount = 0;
                 }
             });
-
             if (missingStrokes) {
-                alert('Missing strokes.\ncourse - ' + vm.courses[courseIndex].name + '\nplayer - ' + 
-                    vm.players[playerCount] + '\nhole - ' + (playerStrokes.length + 1));
-                return;
+                return 'Missing strokes.\ncourse - ' + vm.courses[courseIndex].name + '\nplayer - ' + 
+                    vm.players[playerCount] + '\nhole - ' + (playerStrokes.length + 1);
             }
 
+            // populate holes for each course, since it did not use data binding
             for (var i = 0; i < this.courses.length; i++) {
                 this.courses[i].holes = [];
                 for (var j = 0; j < this.courses[i].numHoles; j++) {
@@ -87,33 +144,6 @@ var vm = new Vue({
                 }
             }
 
-            this.$http.post(
-                '/api/input-rounds',
-                {
-                    date: this.date,
-                    club: this.club,
-                    courses: this.courses,
-                    players: this.players
-                }
-            ).then(function (response) {
-                var success = response.data.success;
-                if (response.data.success) {
-                    this.showHomeView('Input Round successful');
-                } else {
-                    alert(response.data.err);
-                    // reset strokes since they're not bound to an element so they could be out of sync
-                    for (var i = 0; i < this.courses.length; i++) {
-                        this.courses[i].strokes = [];
-                    }
-                }
-            }, function (response) {
-                console.log(response.data);
-                alert(response.data);
-                // reset strokes since they're not bound to an element so they could be out of sync
-                for (var i = 0; i < this.courses.length; i++) {
-                    this.courses[i].strokes = [];
-                }
-            });
         },
         cancelInputRounds: function() {
             this.showHomeView('');
@@ -146,6 +176,13 @@ var vm = new Vue({
             if (!this.canAddCourses) {
                 this.canAddCourses = true;
             }
+        },
+        changeClub: function() {
+            this.courseOptions = this.clubOptions.find(c => c.name == this.club).courses;
+            this.teeOptions = [];
+        },
+        changeCourse: function(courseIndex) {
+            this.teeOptions = this.courseOptions.find(c => c.name == this.courses[courseIndex].name).tees;
         },
         showHomeView: function(statusMsg) {
             this.statusMsg = statusMsg;

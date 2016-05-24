@@ -48,8 +48,6 @@ BEGIN
 		SELECT INTO user_id "ID" FROM "User" WHERE "Name" = user_names[i];
 		IF user_id IS NULL THEN
 			RAISE EXCEPTION 'user % does not exist', user_names[i];
-			--TODO doesn't seem to return false below, gotta check what gets returned to server
-			--RETURN FALSE;
 		END IF;	  
 		user_ids[i] := user_id;
 	END LOOP;
@@ -119,7 +117,3 @@ END;
 
 $BODY$
   LANGUAGE plpgsql VOLATILE
-  COST 100;
-
-ALTER FUNCTION public.insert_rounds(date, text, text[], text[], text[], integer[], integer[])
-  OWNER TO postgres;

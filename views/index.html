@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>Birdie Stats</title>
+  <link href="css/styles.css" rel="stylesheet">
 </head>
 <body>
 
@@ -104,10 +105,22 @@
       <h3>Input Rounds</h3>
 
       <input v-model="date" type="text" size="35" placeholder="Enter date, yyyy-mm-dd"><br><br>
-      <input v-model="club" type="text" size="35" placeholder="Enter club"><br><br>
+      <select v-model="club" @change="changeClub">
+        <option value="" default selected disabled>Select club</option>
+        <option v-for="clubOpt in clubOptions">
+          {{ clubOpt.name }}
+        </option>
+      </select><br><br>
       <table id="table-players">
         <tr v-for="i in players.length">
-          <td><input v-model="players[i]" type="text" size="35" placeholder="Enter player"></td>
+          <td>
+            <select v-model="players[i]">
+              <option value="" default selected disabled>Select player</option>
+              <option v-for="player in playerOptions">
+                {{ player }}
+              </option>
+            </select>
+          </td>
         <tr>   
       </table>         
       <br>
@@ -115,9 +128,22 @@
       <button id="btn-remove-player" @click="removePlayer" v-bind:disabled="players.length == 1">Remove Player</button><br><br>
 
       <div id="div-courses" v-for="i in courses.length">
-        <input v-model="courses[i].name" type="text" size="35" placeholder="Enter course"><br><br>
-        <input v-model="courses[i].tees" type="text" size="35" placeholder="Enter tees"><br><br>
-        <input v-model="courses[i].numHoles" number type="number" size="35" placeholder="Enter number of holes"><br><br>
+        <!-- Course -->
+        <select v-model="courses[i].name" @change="changeCourse(i)">
+          <option value="" default selected disabled>Select course</option>
+          <option v-for="course in courseOptions">
+            {{ course.name }}
+          </option>
+        </select><br><br>
+        <!-- Tees -->
+        <select v-model="courses[i].tees">
+          <option value="" default selected disabled>Select tees</option>
+          <option v-for="tees in teeOptions">
+            {{ tees }}
+          </option>
+        </select><br><br>
+        <!-- NumHoles -->
+        <input v-model="courses[i].numHoles" number type="number" min="1" max="18" size="35" placeholder="# holes"><br><br>
         <!-- Strokes -->
         <table border="1" cellpadding="4">
           <tr>

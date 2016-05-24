@@ -10,27 +10,39 @@ router.get('/', function(req, res){
 
 router.get('/api/rounds', function(req, res){
   var user = req.query.user;
-  Rounds.getRounds(user, function (err, rounds) {
-    if (rounds){
-      res.json({rounds: rounds});
-    } else {
-      console.log('index.js - getRounds - err ' + err);
-      res.json({err: err + ''});
-    }
+  Rounds.getRounds(user)
+  .then(function(result) {
+    res.json({rounds: result});
+  })
+  .catch(function(error) {
+    console.log('index.js - getRounds GET - error ' + error);
+    res.json({err: error + ''});
   });
 });
 
-//TODO - send possible courses, players, ... for input-rounds GET
+router.get('/api/input-rounds', function(req, res){
+  Promise.all([
+    Rounds.getPlayers(),
+    Rounds.getClubs()
+  ])
+  .then(function(result) {
+    res.json({players: result[0], clubs: result[1]});
+  })
+  .catch(function(error) {
+    console.log('index.js - input-rounds GET - error ' + error);
+    res.json({err: error + ''});
+  });
+});
 
 router.post('/api/input-rounds', function(req, res){
   var round = req.body;
-  Rounds.inputRounds(round, function (err, success) {
-    if (success){
-      res.json({success: success});
-    } else {
-      console.log('index.js - inputRounds - err ' + err);
-      res.json({err: err + ''});
-    }
+  Rounds.inputRounds(round)
+  .then(function(result) {
+    res.json({success: result});
+  })
+  .catch(function(error) {
+    console.log('index.js - inputRounds POST - err ' + error);
+    res.json({err: error + ''});
   });
 });
 

@@ -53,8 +53,3 @@ ORDER BY
 	strokes."HoleNumber";
 $BODY$
   LANGUAGE sql STABLE STRICT
-  COST 100
-  ROWS 1000;
-
-ALTER FUNCTION public.get_rounds(text)
-  OWNER TO postgres;
