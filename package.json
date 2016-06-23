@@ -12,7 +12,8 @@
   "dependencies": {
     "body-parser": "~1.13.2",
     "express": "~4.13.1",
-    "pg": "~4.5.5"
+    "pg": "~4.5.5",
+    "cors": "~2.7.1"
   },
   "repository": {
     "type": "git",
