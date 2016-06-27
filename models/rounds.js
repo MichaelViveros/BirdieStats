@@ -1,10 +1,12 @@
 var pg = require('pg');
 var path = require('path');
 
-var config = require('../config');
-
 pg.defaults.ssl = true;
 var conString = process.env.DATABASE_URL;
+if (conString.search('localhost')) {
+  // don't have ssl working on local db
+  pg.defaults.ssl = false;
+}
 
 function handleError(err) {
   if(!err) return false;
@@ -125,12 +127,12 @@ function inputRounds(newRound){
     dbRound.players = newRound.players;
     dbRound.courses = [];
     dbRound.tees = [];
-    dbRound.holes = [];
+    dbRound.holeFlags = [];
     dbRound.strokes = [];
     newRound.courses.forEach(function(course) {
       dbRound.courses.push(course.name);
       dbRound.tees.push(course.tees);
-      dbRound.holes.push(course.holes);
+      dbRound.holeFlags.push(course.holeFlags);
       dbRound.strokes.push(course.strokes);
     });
     
@@ -138,7 +140,7 @@ function inputRounds(newRound){
       if(handleError(err)) return reject(err);
       client.query(
         'SELECT insert_rounds($1,$2,$3,$4,$5,$6,$7)', 
-        [dbRound.roundDate, dbRound.club, dbRound.players, dbRound.courses, dbRound.tees, dbRound.holes, dbRound.strokes], 
+        [dbRound.roundDate, dbRound.club, dbRound.players, dbRound.courses, dbRound.tees, dbRound.holeFlags, dbRound.strokes], 
         function(err, result) {
           if(handleError(err)) return reject(err);
           var success = result.rows[0].insert_rounds;

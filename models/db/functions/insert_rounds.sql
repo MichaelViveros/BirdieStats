@@ -1,6 +1,6 @@
 -- Function: public.insert_rounds(date, text, text[], text[], text[], integer[], integer[])
 --
--- Sample function call:
+-- Sample function call, round was for the first 9 holes at 2 different courses:
 --
 -- SELECT insert_rounds(
 -- 	CURRENT_DATE, 
@@ -8,8 +8,8 @@
 -- 	array['Michael Viveros', 'Roman Viveros'], 
 -- 	array['Martin','Beddoe'], 
 -- 	array['Blue','White'], 
--- 	array[ [1,2,3,4], [1,2,3,4] ],
--- 	array[ [ [3,3,5,7], [5,3,7,2] ], [ [4,4,6,4], [2,6,3,3] ] ]
+-- 	array[ [1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0], [1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0] ],
+-- 	array[ [ [5,2,3,7,7,8,5,4,6,0,0,0,0,0,0,0,0,0], [2,9,3,4,5,4,4,4,4,0,0,0,0,0,0,0,0,0] ], [ [7,8,7,7,7,5,4,3,3,0,0,0,0,0,0,0,0,0], [2,4,2,5,5,5,3,6,3,0,0,0,0,0,0,0,0,0] ] ]
 -- );
 
 
@@ -21,7 +21,7 @@ CREATE OR REPLACE FUNCTION public.insert_rounds(
     user_names text[],
     courses text[],
     tees text[],
-    holes integer[],
+    holeFlags integer[],
     strokes integer[])
   RETURNS boolean AS
 $BODY$
@@ -102,11 +102,13 @@ BEGIN
 
 		FOR j in 1 .. array_length(user_names, 1)
 		LOOP
-			FOR k in 1 .. array_length(holes, 2) 
+			FOR k in 1 .. 18 
 			LOOP
-				INSERT INTO "RoundStrokes" ("UserID", "HoleNumber", "Strokes", "RoundCourseID")
-					VALUES (user_ids[j], holes[i][k], strokes[i][j][k], round_course_id);
-				RAISE NOTICE 'strokes added - %, %, %, %', user_ids[j], holes[i][k], strokes[i][j][k], round_course_id;
+				IF holeFlags[i][k] = 1 THEN
+					INSERT INTO "RoundStrokes" ("UserID", "HoleNumber", "Strokes", "RoundCourseID")
+						VALUES (user_ids[j], k, strokes[i][j][k], round_course_id);
+					RAISE NOTICE 'strokes added - %, %, %, %', user_ids[j], k, strokes[i][j][k], round_course_id;
+				END IF;
 			END LOOP;
 		END LOOP;
 	END LOOP;
