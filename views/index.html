@@ -152,7 +152,9 @@
           </tr>
           <tr v-for="j in players.length">
             <td>{{players[j]}}</td>
-            <td v-for="k in courses[i].numHoles"><input type="number" style="width: 35px;" min="0" max="20"></td>
+            <td v-for="k in courses[i].numHoles">
+              <input v-model="courses[i].strokes[j][k]" number type="number" style="width: 35px;" min="0" max="20">
+            </td>
           </tr>
         </table><br><br>
       </div>

@@ -44,7 +44,7 @@ var vm = new Vue({
                 name: '',
                 tees: '',
                 numHoles: null,
-                strokes: []
+                strokes: [new Array(18).fill(0)]
             });
             this.canAddPlayers = true;
             this.canAddCourses = true;
@@ -86,10 +86,12 @@ var vm = new Vue({
                     this.showHomeView('Input Round successful');
                 } else {
                     alert(response.data.err);
+                    this.refillStrokes();
                 }
             }, function (error) {
                 console.log(error.data);
                 alert(error.data);
+                this.refillStrokes();
             });
         },
         prepareInputRounds: function() {
@@ -104,68 +106,66 @@ var vm = new Vue({
                 if (!this.courses[i].numHoles) return "Missing number of holes for course " + (i + 1);
             }
 
-            // populate strokes for each course, since it did not use data binding
-            var playerStrokes = [];
-            var courseStrokes = [];
-            var playerCount = 0;
-            var courseIndex = 0;
-            var missingStrokes = false;
-            // have to make vm variable since "this" inside jquery code refers to html element, not the Vue object
-            var vm = this;
-            $('#div-courses > table').find('input').each(function () {
-                var strokes = $(this).val();
-                if (strokes.length == 0) {
-                    missingStrokes = true;
-                    return false;
-                }
-                playerStrokes.push(strokes);
-                if (playerStrokes.length == vm.courses[courseIndex].numHoles) {
-                    courseStrokes.push(playerStrokes);
-                    playerStrokes = [];
-                    playerCount++;
-                }
-                if (playerCount == vm.players.length) {
-                    vm.courses[courseIndex].strokes = courseStrokes;
-                    courseStrokes = [];
-                    courseIndex++;
-                    playerCount = 0;
-                }
-            });
-            if (missingStrokes) {
-                return 'Missing strokes.\ncourse - ' + vm.courses[courseIndex].name + '\nplayer - ' + 
-                    vm.players[playerCount] + '\nhole - ' + (playerStrokes.length + 1);
-            }
-
-            // populate holes for each course, since it did not use data binding
             for (var i = 0; i < this.courses.length; i++) {
-                this.courses[i].holes = [];
-                for (var j = 0; j < this.courses[i].numHoles; j++) {
-                   this.courses[i].holes.push(j + 1);
+                for (var j = 0; j < this.players.length; j++) {
+                    var first0 = this.courses[i].strokes[j].indexOf(0);
+                    if (first0 != -1 && first0 < this.courses[i].numHoles) {
+                        return 'Missing Strokes.\nCourse - ' + (i + 1) + '\nPlayer - ' + 
+                        this.players[j] + '\nHole - ' + (first0 + 1);
+                    }
                 }
             }
 
+            // create holeFlags such that if holeFlags[j] = 1, there are strokes for hole j
+            for (var i = 0; i < this.courses.length; i++) {
+                this.courses[i].holeFlags = new Array(18).fill(0);
+                for (var j = 0; j < this.courses[i].numHoles; j++) {
+                    var p1Strokes = this.courses[i].strokes[0];
+                    if (p1Strokes[j] != 0) {
+                        this.courses[i].holeFlags[j] = 1;
+                    }
+                }
+            }
+        },
+        refillStrokes: function() {
+            for (var i = 0; i < this.courses.length; i++) {
+                for (var j = 0; j < this.players.length; j++) {
+                    var extraZeroes = new Array(18 - this.courses[i].numHoles).fill(0);
+                    this.courses[i].strokes[j] = this.courses[i].strokes[j].concat(extraZeroes);
+                }
+            }
         },
         cancelInputRounds: function() {
             this.showHomeView('');
         },
         addPlayer: function() {
             this.players.push('');
+            for (var i = 0; i < this.courses.length; i++) {
+                this.courses[i].strokes.push(new Array(18).fill(0));
+            }
             if (this.players.length == 4) {
                 this.canAddPlayers = false;
             }
         },
         removePlayer: function() {
             this.players.pop();
+            for (var i = 0; i < this.courses.length; i++) {
+                this.courses[i].strokes.pop();
+            }
             if (!this.canAddPlayers) {
                 this.canAddPlayers = true;
             }
         },
         addCourse: function() {
+            var courseStrokes = [];
+            for (var i = 0; i < this.players.length; i++) {
+                courseStrokes.push(new Array(18).fill(0));
+            }
             this.courses.push({
                 name: '',
                 tees: '',
                 numHoles: this.courses[0].numHoles,
-                strokes: []
+                strokes: courseStrokes
             });
             if (this.courses.length == 2) {
                 this.canAddCourses = false;
