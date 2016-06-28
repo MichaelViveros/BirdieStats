@@ -1,3 +1,7 @@
 node_modules
 tmp
 public/libs
+mobile/BirdieStats/platforms
+mobile/BirdieStats/plugins
+mobile/BirdieStats/www/js/bundle.js
+mobile/old
