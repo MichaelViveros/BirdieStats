@@ -25,6 +25,7 @@ To run on your Android device or emulator:
 * `cordova run android`
 
 Alternatively you can run it in Android Studio:
+
 1. Import Existing Android Code into Android Studio
 2. Enter path to platforms/android
 3. Select CordovaLib and MainActivity (not the one in build folder)
