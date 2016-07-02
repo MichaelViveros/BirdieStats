@@ -11,67 +11,71 @@ td {
 
   <p>{{statusMsg}}</p>
 
-  <!-- Date -->
-  <input v-model="date" type="date"><br><br>
-  <!-- Club -->
-  <select v-model="club" @change="changeClub">
-    <option value="" default selected disabled>Select club</option>
-    <option v-for="clubOpt in clubOptions">
-      {{ clubOpt.name }}
-    </option>
-  </select><br><br>
-  <!-- Players -->
-  <table id="table-players" cellpadding="6">
-    <tr v-for="i in players.length">
-      <td>
-        <select v-model="players[i]">
-          <option value="" default selected disabled>Select player</option>
-          <option v-for="player in playerOptions">
-            {{ player }}
-          </option>
-        </select>
-      </td>
-    <tr>   
-  </table><br>
-  <button id="btn-add-player" @click="addPlayer" v-bind:disabled="!canAddPlayers">Add Player</button>
-  <button id="btn-remove-player" @click="removePlayer" v-bind:disabled="players.length == 1">Remove Player</button><br><br>
+  <div v-show="initDataLoaded">
 
-  <div id="div-courses" v-for="i in courses.length">
-    <!-- Course -->
-    <select v-model="courses[i].name" @change="changeCourse(i)">
-      <option value="" default selected disabled>Select course</option>
-      <option v-for="course in courseOptions">
-        {{ course.name }}
+    <!-- Date -->
+    <input v-model="date" type="date"><br><br>
+    <!-- Club -->
+    <select v-model="club" @change="changeClub">
+      <option value="" default selected disabled>Select club</option>
+      <option v-for="clubOpt in clubOptions">
+        {{ clubOpt.name }}
       </option>
     </select><br><br>
-    <!-- Tees -->
-    <select v-model="courses[i].tees">
-      <option value="" default selected disabled>Select tees</option>
-      <option v-for="tees in teeOptions">
-        {{ tees }}
-      </option>
-    </select><br><br>
-    <!-- NumHoles -->
-    <input v-model="courses[i].numHoles" number type="number" min="1" max="18" placeholder="# holes"><br><br>
-    <!-- Strokes -->
-    <table cellpadding="4">
-      <tr>
-        <th>Hole</th>
-        <th v-for="j in players.length">{{players[j]}}</th>
-      </tr>
-      <tr v-for="j in courses[i].numHoles">
-        <td>{{j+1}}</td>
-        <td v-for="k in players.length">
-          <input v-model="courses[i].strokes[k][j]" number type="number" min="0" max="20" align="center">
+    <!-- Players -->
+    <table id="table-players" cellpadding="6">
+      <tr v-for="i in players.length">
+        <td>
+          <select v-model="players[i]">
+            <option value="" default selected disabled>Select player</option>
+            <option v-for="player in playerOptions">
+              {{ player }}
+            </option>
+          </select>
         </td>
-      </tr>
+      <tr>   
     </table><br>
-  </div>
-  <button id="btn-add-course" @click="addCourse" v-bind:disabled="!canAddCourses">Add Course</button>
-  <button id="btn-remove-course" @click="removeCourse" v-bind:disabled="courses.length == 1">Remove Course</button><br><br>
+    <button id="btn-add-player" @click="addPlayer" v-bind:disabled="!canAddPlayers">Add Player</button>
+    <button id="btn-remove-player" @click="removePlayer" v-bind:disabled="players.length == 1">Remove Player</button><br><br>
 
-  <button id="btn-done-input-rounds" @click="sendInputRounds">Done</button>
-  <button id="btn-cancel-input-rounds" @click="cancelInputRounds">Cancel</button>
+    <div id="div-courses" v-for="i in courses.length">
+      <!-- Course -->
+      <select v-model="courses[i].name" @change="changeCourse(i)">
+        <option value="" default selected disabled>Select course</option>
+        <option v-for="course in courseOptions">
+          {{ course.name }}
+        </option>
+      </select><br><br>
+      <!-- Tees -->
+      <select v-model="courses[i].tees">
+        <option value="" default selected disabled>Select tees</option>
+        <option v-for="tees in teeOptions">
+          {{ tees }}
+        </option>
+      </select><br><br>
+      <!-- NumHoles -->
+      <input v-model="courses[i].numHoles" number type="number" min="1" max="18" placeholder="# holes"><br><br>
+      <!-- Strokes -->
+      <table cellpadding="4">
+        <tr>
+          <th>Hole</th>
+          <th v-for="j in players.length">{{players[j]}}</th>
+        </tr>
+        <tr v-for="j in courses[i].numHoles">
+          <td>{{j+1}}</td>
+          <td v-for="k in players.length">
+            <input v-model="courses[i].strokes[k][j]" number type="number" min="0" max="20" align="center">
+          </td>
+        </tr>
+      </table><br>
+    </div>
+    <button id="btn-add-course" @click="addCourse" v-bind:disabled="!canAddCourses">Add Course</button>
+    <button id="btn-remove-course" @click="removeCourse" v-bind:disabled="courses.length == 1">Remove Course</button><br><br>
+
+    <button id="btn-done-input-rounds" @click="sendInputRounds">Done</button>
+    <button id="btn-cancel-input-rounds" @click="cancelInputRounds">Cancel</button>
+
+  </div>
 
 </template>
 
@@ -90,7 +94,8 @@ export default {
       playerOptions: [],
       clubOptions: [],
       courseOptions: [],
-      teeOptions: []
+      teeOptions: [],
+      initDataLoaded: false
     }
   },
   methods: {
@@ -128,6 +133,11 @@ export default {
       if (!this.club) return "Missing Club";
       for (var i = 0; i < this.players.length; i++) {
         if (!this.players[i]) return "Missing Name for Player " + (i + 1);
+        for (var j = 0; j < this.players.length; j++) {
+          if (j != i && this.players[j] == this.players[i]) {
+            return "Duplicate Player - " + this.players[i];
+          } 
+        }
       }
       for (var i = 0; i < this.courses.length; i++) {
         if (!this.courses[i].name) return "Missing Course " + (i + 1);
@@ -231,7 +241,9 @@ export default {
   },
   events: {
     'init-input-rounds': function () {
-      this.reset('Setting up input rounds ...');
+      this.initDataLoaded = false;
+      this.statusMsg = 'Getting courses, players, ...';
+
       this.clubOptions = [];
       this.playerOptions = [];
       this.courseOptions = [];
@@ -242,10 +254,11 @@ export default {
       ).then(function (response) {
         this.clubOptions = response.data.clubs;
         this.playerOptions = response.data.players;
+        this.reset('');
+        this.initDataLoaded = true;
       }, function (error) {
         alert(error.data);
       });
-      this.statusMsg = '';
     }
   }
 }
