@@ -6,7 +6,8 @@ BirdieStats is a golf stat-tracking application. Users can input scores from a r
 It consists of a: 
 * NodeJS server
 * [VueJS](https://vuejs.org/) front-end
-* PostgreSQL db 
+* [Cordova](https://github.com/MichaelViveros/BirdieStats/tree/master/mobile/BirdieStats) app
+* PostgreSQL db
 
 [Documentation](https://github.com/MichaelViveros/BirdieStats/tree/master/doc)
 
