@@ -5,7 +5,7 @@ Returns all the golf rounds for a given user.
 
 #### Parameters
 | Parameter | Type | Description |
-| :----: |:----:| ---- | ---- |
+| :----: | :----: | ---- |
 | user | query  | Name of user<br>"" will return rounds for all users |
 
 ```javascript
@@ -63,7 +63,7 @@ Adds a new round to the db
 
 #### Parameters
 | Parameter | Type | Description |
-| :----: |:----:| ---- | ---- |
+| :----: | :----: | ---- |
 | date | body  | Date of round |
 | club | body  | Club where round was played |
 | courses | body  | List of courses, includes strokes for players |
