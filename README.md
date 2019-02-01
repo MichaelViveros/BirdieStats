@@ -1,4 +1,4 @@
-# BirdieStats
+# BirdieStats 1
 [http://www.birdiestats.com/](http://www.birdiestats.com/)
 
 BirdieStats is a golf stat-tracking application. Users can input scores from a round on their phone and view all their scores on the website.
