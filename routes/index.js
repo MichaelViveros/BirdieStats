@@ -5,7 +5,7 @@ var path = require('path');
 var Rounds = require('../models/rounds');
 
 router.get('/', function(req, res){
-  res.sendFile(path.join(__dirname, '../views/index.html'));
+  res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
 router.get('/api/rounds', function(req, res){

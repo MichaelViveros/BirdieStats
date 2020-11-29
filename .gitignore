@@ -6,3 +6,6 @@ mobile/BirdieStats/plugins
 mobile/BirdieStats/www/js/bundle.js
 mobile/old
 mobile/BirdieStats/birdie_stats.keystore
+dist
+.DS_Store
+notes.txt

@@ -3,18 +3,53 @@
   "version": "1.0.0",
   "description": "Golf stat-tracking website",
   "engines": {
-    "node": "4.4.0"
+    "node": "12.20"
   },
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "build": "vue-cli-service build",
+    "serve": "vue-cli-service serve"
   },
   "dependencies": {
     "body-parser": "~1.13.2",
+    "core-js": "^3.6.5",
+    "cors": "~2.7.1",
     "express": "~4.13.1",
     "pg": "~4.5.5",
-    "cors": "~2.7.1"
+    "v-tooltip": "^2.0.3",
+    "vue": "^2.6.12",
+    "vue-numeric": "^2.3.0",
+    "vue-resource": "^1.5.1"
   },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "~4.5.0",
+    "@vue/cli-plugin-eslint": "~4.5.0",
+    "@vue/cli-service": "~4.5.0",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^6.7.2",
+    "eslint-plugin-vue": "^6.2.2",
+    "vue-template-compiler": "^2.6.11"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true
+    },
+    "extends": [
+      "plugin:vue/essential",
+      "eslint:recommended"
+    ],
+    "parserOptions": {
+      "parser": "babel-eslint"
+    },
+    "rules": {}
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/MichaelViveros/BirdieStats"
