@@ -1,25 +1,17 @@
-# API
-
-## GET /api/rounds  
+# GET /api/rounds  
 Returns all the golf rounds for a given user.
 
-#### Parameters
+## Request
 | Parameter | Type | Description |
 | :----: | :----: | ---- |
-| user | query  | Name of user<br>"" will return rounds for all users |
+| user | query  | Name of user, `""` will return rounds for all users |
 
-```javascript
-{
-  "user": "Michael Viveros"
-}
+## Response
+```
+Status: 200 OK
 ```
 
-#### Responses
-| Code | Response | Type | Description |
-| :----: |:----:| :----:| ---- |
-| 200 | rounds | body  | List of rounds |
-
-```javascript
+```json
 {
   "rounds": [
     {
@@ -58,47 +50,67 @@ Returns all the golf rounds for a given user.
 }
 ```
 
-## POST /api/input-rounds  
-Adds a new round to the db
+# POST /api/input-rounds  
+Creates a new round.
 
-#### Parameters
+## Request
 | Parameter | Type | Description |
 | :----: | :----: | ---- |
-| date | body  | Date of round |
-| club | body  | Club where round was played |
-| courses | body  | List of courses, includes strokes for players |
-| players | body  | List of players |
+| club | string | Name of club |
+| courses | object[] | List of courses |
+| date | string | Date of round in the format `YYYY-MM-DD` |
+| players | string[] | List of players |
 
-```javascript
+### course
+| Parameter | Type | Description |
+| :----: | :-------: | ---- |
+| holeFlags | int[] | List of size 18 where `l[i] = 1` if there's a score for hole `i`, else `l[i] = 0` |
+| name | string | Name of course
+| numHoles | int | Number of holes played
+| strokes | int[][] | List of size 18 where `l[i][j]` is player `i`'s strokes for hole `j`, `0` if hole wasn't played
+| tees | string | Name of tees
+
+### Example
+```json
 {
-  "date":"2016-05-17",
-  "club":"Chedoke",
-  "courses":[
+  "club": "Chedoke",
+  "courses": [
     {
-      "name":"Martin",
-      "tees":"Red",
-      "numHoles":3,
-      "strokes":[
-        ["4","6","3"]
+      "holeFlags": [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "name": "Martin",
+      "numHoles": 9,
+      "strokes": [
+        [4, 3, 7, 5, 5, 6, 4, 3, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [8, 5, 7, 3, 6, 4, 7, 4, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
       ],
-      "holes":[
-        1,2,3
-      ]
+      "tees": "White"
     }
   ],
+  "date": "2020-11-29",
   "players":[
-    "Michael Viveros"
+    "Michael Viveros",
+    "Roman Viveros"
   ]
 }
 ```
 
-#### Responses
-| Code | Response | Type | Description |
-| :----: |:----:| :----:| ---- |
-| 200 | success | body  | Result of adding round to db |
+## Response
+```
+Status: 200 OK
+```
 
-```javascript
+```json
 {
-  "success":true
+  "success": true
 }
 ```
+
+```
+Status: 200 OK
+```
+
+```json
+{
+  "err": "error: ... error message ..."
+}
